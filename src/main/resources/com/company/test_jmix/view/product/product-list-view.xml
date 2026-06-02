@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://com.company.test_jmix.view.product/productListView.title"
+      focusComponent="productsDataGrid">
+    <data>
+        <collection id="productsDc" class="com.company.test_jmix.entity.Product">
+            <loader id="productsDl" readOnly="true">
+                <query><![CDATA[select e from Product e]]></query>
+            </loader>
+        </collection>
+    </data>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createBtn" action="productsDataGrid.create"/>
+            <button id="editBtn" action="productsDataGrid.edit"/>
+            <button id="removeBtn" action="productsDataGrid.remove"/>
+        </hbox>
+        <dataGrid id="productsDataGrid" width="100%" minHeight="20em" dataContainer="productsDc">
+            <actions>
+                <action id="create" type="list_create"/>
+                <action id="edit" type="list_edit"/>
+                <action id="remove" type="list_remove"/>
+            </actions>
+            <columns>
+                <column property="code"/>
+                <column property="name"/>
+                <column property="price"/>
+                <column property="stock"/>
+            </columns>
+        </dataGrid>
+    </layout>
+</view>
