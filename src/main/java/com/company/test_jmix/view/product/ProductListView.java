@@ -1,12 +1,17 @@
 package com.company.test_jmix.view.product;
 
 import com.company.test_jmix.entity.Product;
-import io.jmix.flowui.view.*;
-import com.vaadin.flow.router.Route;
 
-@Route(value = "products", layout = DefaultMainViewParent.class)
-@ViewController("ProductListView")
-@ViewDescriptor("product-list-view.xml")
+import com.company.test_jmix.view.main.MainView;
+
+import com.vaadin.flow.router.Route;
+import io.jmix.flowui.view.*;
+
+
+@Route(value = "products", layout = MainView.class)
+@ViewController(id = "Product.list")
+@ViewDescriptor(path = "product-list-view.xml")
 @LookupComponent("productsDataGrid")
+@DialogMode(width = "64em")
 public class ProductListView extends StandardListView<Product> {
 }
