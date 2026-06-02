@@ -1,90 +1,83 @@
 package com.company.test_jmix.entity;
 
-import io.jmix.core.entity.annotation.EntityName;
+import io.jmix.core.annotation.DeletedBy;
+import io.jmix.core.annotation.DeletedDate;
+import io.jmix.core.entity.annotation.JmixGeneratedValue;
+import io.jmix.core.metamodel.annotation.InstanceName;
+import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
-@Entity(name = "testjmix_Product")
-@Table(name = "PRODUCTS")
-@InstanceName("code")
+@JmixEntity
+@Table(name = "PRODUCT", indexes = {
+        @Index(name = "IDX_PRODUCT_UNQ", columnList = "CODE", unique = true)
+})
+@Entity
 public class Product {
-
+    @JmixGeneratedValue
+    @Column(name = "ID", nullable = false)
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Column(name = "VERSION", nullable = false)
     @Version
-    private Long version;
+    private Integer version;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Code is required")
-    private String code;
-
-    @Column(nullable = false)
-    @NotNull(message = "Name is required")
-    private String name;
-
-    @Column(precision = 10, scale = 2)
-    @NotNull(message = "Price is required")
-    private BigDecimal price;
-
-    @Column
-    @NotNull(message = "Stock is required")
-    private Integer stock;
-
-    @Column(name = "CREATED_BY", updatable = false)
+    @CreatedBy
+    @Column(name = "CREATED_BY")
     private String createdBy;
 
-    @Column(name = "CREATED_DATE", updatable = false)
-    private LocalDateTime createdDate;
+    @CreatedDate
+    @Column(name = "CREATED_DATE")
+    private OffsetDateTime createdDate;
 
+    @LastModifiedBy
     @Column(name = "LAST_MODIFIED_BY")
     private String lastModifiedBy;
 
+    @LastModifiedDate
     @Column(name = "LAST_MODIFIED_DATE")
-    private LocalDateTime lastModifiedDate;
+    private OffsetDateTime lastModifiedDate;
 
+    @DeletedBy
     @Column(name = "DELETED_BY")
     private String deletedBy;
 
+    @DeletedDate
     @Column(name = "DELETED_DATE")
-    private LocalDateTime deletedDate;
+    private OffsetDateTime deletedDate;
 
-    // Getters and setters
+    @Column(name = "CODE", nullable = false)
+    @NotNull(message = "Code is required")
+    private String code;
 
-    public UUID getId() {
-        return id;
+    @InstanceName
+    @Column(name = "NAME", nullable = false)
+    @NotNull(message = "Name  is required")
+    private String name;
+
+    @Column(name = "PRICE", nullable = false, precision = 19, scale = 2)
+    @NotNull(message = "Price  is required")
+    private BigDecimal price;
+
+    @Column(name = "STOCK", nullable = false)
+    @NotNull(message = "Stock  is required")
+    private Integer stock;
+
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public BigDecimal getPrice() {
@@ -95,44 +88,28 @@ public class Product {
         this.price = price;
     }
 
-    public Integer getStock() {
-        return stock;
+    public String getName() {
+        return name;
     }
 
-    public void setStock(Integer stock) {
-        this.stock = stock;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public String getCode() {
+        return code;
     }
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
+    public OffsetDateTime getDeletedDate() {
+        return deletedDate;
     }
 
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getLastModifiedBy() {
-        return lastModifiedBy;
-    }
-
-    public void setLastModifiedBy(String lastModifiedBy) {
-        this.lastModifiedBy = lastModifiedBy;
-    }
-
-    public LocalDateTime getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
+    public void setDeletedDate(OffsetDateTime deletedDate) {
+        this.deletedDate = deletedDate;
     }
 
     public String getDeletedBy() {
@@ -143,12 +120,52 @@ public class Product {
         this.deletedBy = deletedBy;
     }
 
-    public LocalDateTime getDeletedDate() {
-        return deletedDate;
+    public OffsetDateTime getLastModifiedDate() {
+        return lastModifiedDate;
     }
 
-    public void setDeletedDate(LocalDateTime deletedDate) {
-        this.deletedDate = deletedDate;
+    public void setLastModifiedDate(OffsetDateTime lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
     }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public OffsetDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(OffsetDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
 }
-//
