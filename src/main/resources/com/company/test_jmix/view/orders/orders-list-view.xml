@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://ordersListView.title"
+      focusComponent="orderssDataGrid">
+    <data>
+        <collection id="orderssDc"
+                    class="com.company.test_jmix.entity.Orders">
+            <loader id="orderssDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Orders e]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <genericFilter component="genericFilter"/>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <genericFilter id="genericFilter"
+               dataLoader="orderssDl">
+            <properties include=".*"/>
+        </genericFilter>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="orderssDataGrid.createAction"/>
+                <button id="editButton" action="orderssDataGrid.editAction"/>
+                <button id="removeButton" action="orderssDataGrid.removeAction"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="orderssDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="orderssDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="orderssDc"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns  resizable="true">
+                <column property="orderNumber"/>
+                <column property="totalAmount"/>
+                <column property="orderDate"/>
+                <column property="stockCount"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>
