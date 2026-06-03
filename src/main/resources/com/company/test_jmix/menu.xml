@@ -4,6 +4,8 @@
     <menu id="application" title="msg://com.company.test_jmix/menu.application.title" opened="true">
         <item view="User.list" title="msg://com.company.test_jmix.view.user/UserListView.title"/>
         <item view="Product.list" title="msg://com.company.test_jmix.view.product/productListView.title"/>
-    </menu>
+        <item view="Orders.list" title="msg://com.company.test_jmix.view.orders/ordersListView.title"/>
+        <item view="Client.list" title="msg://com.company.test_jmix.view.client/clientListView.title"/>
+</menu>
 
 </menu-config>
