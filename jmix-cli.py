@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from datetime import datetime
 
 import requests
 
@@ -46,8 +47,6 @@ def gen_entity_mechanic(n, fi):
         )
         java_methods += "        this." + f_name + " = " + f_name + ";\n"
         java_methods += "    }\n\n"
-
-    # 3. Asamblam structura completa a clasei Java conform Jmix Studio
 
     # 3. Asamblam structura completa a clasei Java conform Jmix Studio
     clasa_completa = (
@@ -254,19 +253,35 @@ def gen_detail_ui(n, fi):
             )
         elif t == "BigDecimal":
             flds += (
-                '            <numberField id="'
+                '            <textField id="'
                 + name
                 + 'Field" property="'
                 + name
-                + '" width="100%"/>\n'
+                + '" width="100%" datatype="decimal"/>\n'
             )
-        elif t == "Integer" or t == "Long":
+        elif t == "Integer":
             flds += (
-                '            <numberField id="'
+                '            <textField id="'
                 + name
                 + 'Field" property="'
                 + name
-                + '" width="100%"/>\n'
+                + '" width="100%" datatype="int"/>\n'
+            )
+        elif t == "Long":
+            flds += (
+                '            <textField id="'
+                + name
+                + 'Field" property="'
+                + name
+                + '" width="100%" datatype="long"/>\n'
+            )
+        elif t == "Double":
+            flds += (
+                '            <textField id="'
+                + name
+                + 'Field" property="'
+                + name
+                + '" width="100%" datatype="double"/>\n'
             )
         else:
             flds += (
@@ -461,12 +476,94 @@ def update_menu(n):
         print("⚠️ Structura invalida pentru menu.xml (lipsete tag-ul </menu>)!")
 
 
+def gen_liquibase_changelog(n, fi):
+    # 1. Determinăm folderele
+    current_year = datetime.now().strftime("%Y")
+    current_month = datetime.now().strftime("%m")
+    timestamp_id = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    target_dir = (
+        PROIECT_PATH
+        + f"/src/main/resources/com/company/test_jmix/liquibase/changelog/{current_year}/{current_month}"
+    )
+    os.makedirs(target_dir, exist_ok=True)
+    filename = f"{target_dir}/{timestamp_id}-{n.lower()}.xml"
+    table_name = n.upper()
+
+    def map_type(java_type):
+        jt = java_type.lower()
+        if jt in ["string"]:
+            return "VARCHAR(255)"
+        if jt in ["integer"]:
+            return "INT"
+        if jt in ["long"]:
+            return "BIGINT"
+        if jt in ["boolean"]:
+            return "BOOLEAN"
+        if jt in ["localdatetime"]:
+            return "timestamp with time zone"
+        if jt in ["localdate"]:
+            return "DATE"
+        if jt in ["uuid"]:
+            return "UUID"
+        if jt in ["bigdecimal"]:
+            return "NUMERIC(19, 2)"
+        if jt in ["double"]:
+            return "double precision"
+        return "VARCHAR(255)"
+
+    # 2. Procesăm lista returnată de get_fields
+    fields_list = get_fields(fi)
+
+    xml_columns = ""
+    for f_name, f_type in fields_list:
+        sql_col_name = f_name.upper()
+        sql_type = map_type(f_type)
+        xml_columns += (
+            f'            <column name="{sql_col_name}" type="{sql_type}" />\n'
+        )
+
+    # Structura XML
+    xml_content = f"""<?xml version="1.0" encoding="UTF-8" ?>
+    <databaseChangeLog
+            xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+            objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="{timestamp_id}-1" author="Test_jmix">
+        <createTable tableName="{table_name}">
+            <column name="ID" type="UUID">
+                <constraints
+					nullable="false"
+					primaryKey="true"
+					primaryKeyName="PK_{table_name}"
+				/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false" />
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)" />
+            <column name="CREATED_DATE" type="timestamp with time zone" />
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)" />
+            <column name="LAST_MODIFIED_DATE" type="timestamp with time zone" />
+{xml_columns}        </createTable>
+    </changeSet>
+</databaseChangeLog>
+"""
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(xml_content)
+    print(f" -> Generated Liquibase XML via get_fields(): {filename}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 3:
         a, name, fields = sys.argv[1], sys.argv[2], sys.argv[3]
         if a == "entity":
             gen_entity_mechanic(name, fields)
             update_messages_entity(name, fields)
+            gen_liquibase_changelog(name, fields)
         elif a == "ui-list":
             gen_list_ui(name, fields)
             update_menu(name)
