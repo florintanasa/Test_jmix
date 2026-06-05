@@ -2,10 +2,33 @@ import os
 import re
 import sys
 from datetime import datetime
+from pathlib import Path
 
 import requests
 
-PROIECT_PATH = "/home/florin/IdeaProjects/Test_jmix"
+PROIECT_PATH = str(Path.cwd())
+
+
+def get_project_name(settings_path: Path = Path("settings.gradle")) -> str | None:
+    text = settings_path.read_text(encoding="utf-8")
+    # caută rootProject.name = 'name' sau "name"
+    m = re.search(r"""rootProject\.name\s*=\s*(['"])(.*?)\1""", text)
+    return m.group(2) if m else None
+
+
+PROJECT = get_project_name()
+project_name = (PROJECT or "").lower()
+
+
+def get_company_name(settings_path: Path = Path("build.gradle")) -> str | None:
+    text = settings_path.read_text(encoding="utf-8")
+    # caută group = 'com.company' sau "com.company"
+    m = re.search(r"""group\s*=\s*(['"])(.*?)\1""", text)
+    return m.group(2) if m else None
+
+
+COMPANY = get_company_name() or ""
+company_path = COMPANY.replace(".", "/")
 
 
 def get_fields(fi):
@@ -50,13 +73,14 @@ def gen_entity_mechanic(n, fi):
 
     # 3. Asamblam structura completa a clasei Java conform Jmix Studio
     clasa_completa = (
-        "package com.company.test_jmix.entity;\n\n"
+        f"package {COMPANY}.{project_name}.entity;\n\n"
         "import io.jmix.core.entity.annotation.JmixGeneratedValue;\n"
         "import io.jmix.core.metamodel.annotation.InstanceName;\n"
         "import io.jmix.core.metamodel.annotation.JmixEntity;\n"
         "import jakarta.persistence.*;\n"
         "import java.math.BigDecimal;\n"
         "import java.time.LocalDate;\n"
+        "import java.time.LocalDateTime;\n"
         "import java.time.OffsetDateTime;\n"
         "import java.util.UUID;\n"
         "import org.springframework.data.annotation.CreatedBy;\n"
@@ -104,8 +128,8 @@ def gen_entity_mechanic(n, fi):
         "    // --- Specific Getters and Setters ---\n" + java_methods + "}\n"
     )
 
-    # 4. Scriem fisierul direct in structura corecta a proiectului Test_jmix
-    td = PROIECT_PATH + "/src/main/java/com/company/test_jmix/entity"
+    # 4. Scriem fisierul direct in structura corecta a proiectului
+    td = PROIECT_PATH + f"/src/main/java/{company_path}/{project_name}/entity"
     if not os.path.exists(td):
         os.makedirs(td)
 
@@ -117,9 +141,9 @@ def gen_entity_mechanic(n, fi):
 def gen_list_ui(n, fi):
     print("Generating List UI Mechanically...")
     j = (
-        "package com.company.test_jmix.view." + n.lower() + ";\n"
-        "import com.company.test_jmix.entity." + n + ";\n"
-        "import com.company.test_jmix.view.main.MainView;\n"
+        "package " + COMPANY + "." + project_name + ".view." + n.lower() + ";\n"
+        "import " + COMPANY + "." + project_name + ".entity." + n + ";\n"
+        "import " + COMPANY + "." + project_name + ".view.main.MainView;\n"
         "import com.vaadin.flow.router.Route;\n"
         "import io.jmix.flowui.view.*;\n\n"
         '@Route(value="' + n.lower() + 's", layout=MainView.class)\n'
@@ -140,7 +164,13 @@ def gen_list_ui(n, fi):
         '      focusComponent="' + n.lower() + 'sDataGrid">\n'
         "    <data>\n"
         '        <collection id="' + n.lower() + 'sDc"\n'
-        '                    class="com.company.test_jmix.entity.' + n + '">\n'
+        '                    class="'
+        + COMPANY
+        + "."
+        + project_name
+        + ".entity."
+        + n
+        + '">\n'
         '            <loader id="' + n.lower() + 'sDl" readOnly="true">\n'
         "                <query>\n"
         "                    <![CDATA[select e from " + n + " e]]>\n"
@@ -202,8 +232,14 @@ def gen_list_ui(n, fi):
         "</view>\n"
     )
 
-    jd = PROIECT_PATH + "/src/main/java/com/company/test_jmix/view/" + n.lower()
-    xd = PROIECT_PATH + "/src/main/resources/com/company/test_jmix/view/" + n.lower()
+    jd = (
+        PROIECT_PATH + f"/src/main/java/{company_path}/{project_name}/view/" + n.lower()
+    )
+    xd = (
+        PROIECT_PATH
+        + f"/src/main/resources/{company_path}/{project_name}/view/"
+        + n.lower()
+    )
 
     if not os.path.exists(jd):
         os.makedirs(jd)
@@ -220,9 +256,9 @@ def gen_detail_ui(n, fi):
 
     # 1. Controller Java pentru ecranul de Detaliu
     j = (
-        "package com.company.test_jmix.view." + n.lower() + ";\n\n"
-        "import com.company.test_jmix.entity." + n + ";\n"
-        "import com.company.test_jmix.view.main.MainView;\n"
+        "package " + COMPANY + "." + project_name + ".view." + n.lower() + ";\n\n"
+        "import " + COMPANY + "." + project_name + ".entity." + n + ";\n"
+        "import " + COMPANY + "." + project_name + ".view.main.MainView;\n"
         "import com.vaadin.flow.router.Route;\n"
         "import io.jmix.flowui.view.*;\n\n"
         '@Route(value="' + n.lower() + 's/:id", layout=MainView.class)\n'
@@ -299,7 +335,13 @@ def gen_detail_ui(n, fi):
         '      title="msg://' + n.lower() + 'DetailView.title">\n'
         "    <data>\n"
         '        <instance id="' + n.lower() + 'Dc"\n'
-        '                    class="com.company.test_jmix.entity.' + n + '">\n'
+        '                    class="'
+        + COMPANY
+        + "."
+        + project_name
+        + ".entity."
+        + n
+        + '">\n'
         '            <fetchPlan extends="_base"/>\n'
         '            <loader id="' + n.lower() + 'Dl"/>\n'
         "        </instance>\n"
@@ -325,8 +367,14 @@ def gen_detail_ui(n, fi):
         "</view>\n"
     )
 
-    jd = PROIECT_PATH + "/src/main/java/com/company/test_jmix/view/" + n.lower()
-    xd = PROIECT_PATH + "/src/main/resources/com/company/test_jmix/view/" + n.lower()
+    jd = (
+        PROIECT_PATH + f"/src/main/java/{company_path}/{project_name}/view/" + n.lower()
+    )
+    xd = (
+        PROIECT_PATH
+        + f"/src/main/resources/{company_path}/{project_name}/view/"
+        + n.lower()
+    )
 
     if not os.path.exists(jd):
         os.makedirs(jd)
@@ -343,51 +391,53 @@ def update_messages_entity(n, fi):
     fields_list = get_fields(fi)
 
     # Definim calea catre cele doua fisiere din proiectul tau Gradle
-    base_path = PROIECT_PATH + "/src/main/resources/com/company/test_jmix"
+    base_path = PROIECT_PATH + f"/src/main/resources/{company_path}/{project_name}"
     en_path = base_path + "/messages_en.properties"
     ro_path = base_path + "/messages_ro.properties"
 
     # 1. Pregatim traducerile pentru limba Engleza (Mecanic)
     en_lines = []
-    en_lines.append(f"com.company.test_jmix.entity/{n}={n}")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.id=Id")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.version=Version")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.createdBy=Created by")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.createdDate=Created date")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.lastModifiedBy=Last modified by")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}={n}")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.id=Id")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.version=Version")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.createdBy=Created by")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.createdDate=Created date")
     en_lines.append(
-        f"com.company.test_jmix.entity/{n}.lastModifiedDate=Last modified date"
+        f"{COMPANY}.{project_name}.entity/{n}.lastModifiedBy=Last modified by"
     )
-    en_lines.append(f"com.company.test_jmix.entity/{n}.deletedBy=Deleted by")
-    en_lines.append(f"com.company.test_jmix.entity/{n}.deletedDate=Deleted date")
+    en_lines.append(
+        f"{COMPANY}.{project_name}.entity/{n}.lastModifiedDate=Last modified date"
+    )
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.deletedBy=Deleted by")
+    en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.deletedDate=Deleted date")
 
     for f_name, _ in fields_list:
         # Transforma camelCase in text separat (ex: creditLimit -> Credit limit)
         spaced_name = re.sub(r"(?<!^)(?=[A-Z])", " ", f_name).lower()
         readable_en = spaced_name[0].upper() + spaced_name[1:]
-        en_lines.append(f"com.company.test_jmix.entity/{n}.{f_name}={readable_en}")
+        en_lines.append(f"{COMPANY}.{project_name}.entity/{n}.{f_name}={readable_en}")
 
     # Adaugam si titlurile pentru ecranele UI generate anterior
     en_lines.append(
-        f"com.company.test_jmix.view.{n.lower()}/{n.lower()}ListView.title={n}s"
+        f"{COMPANY}.{project_name}.view.{n.lower()}/{n.lower()}ListView.title={n}s"
     )
     en_lines.append(
-        f"com.company.test_jmix.view.{n.lower()}/{n.lower()}DetailView.title={n} detail"
+        f"{COMPANY}.{project_name}.view.{n.lower()}/{n.lower()}DetailView.title={n} detail"
     )
 
     # 2. Pregatim traducerile pentru limba Romana (Folosind AI-ul tau local din Ollama pentru traducere)
     ro_lines = []
-    ro_lines.append(f"com.company.test_jmix.entity/{n}={n}")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.id=Id")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.version=Versiune")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.createdBy=Creat de")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.createdDate=Data crearii")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.lastModifiedBy=Modificat de")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}={n}")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.id=Id")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.version=Versiune")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.createdBy=Creat de")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.createdDate=Data crearii")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.lastModifiedBy=Modificat de")
     ro_lines.append(
-        f"com.company.test_jmix.entity/{n}.lastModifiedDate=Data modificarii"
+        f"{COMPANY}.{project_name}.entity/{n}.lastModifiedDate=Data modificarii"
     )
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.deletedBy=Sters de")
-    ro_lines.append(f"com.company.test_jmix.entity/{n}.deletedDate=Data stergerii")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.deletedBy=Sters de")
+    ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.deletedDate=Data stergerii")
 
     for f_name, _ in fields_list:
         spaced_name = re.sub(r"(?<!^)(?=[A-Z])", " ", f_name).lower()
@@ -405,13 +455,13 @@ def update_messages_entity(n, fi):
         # Plasa de siguranta in caz de lipsa serviciu
         if not traducere_ro or "Error" in traducere_ro:
             traducere_ro = spaced_name.capitalize()
-        ro_lines.append(f"com.company.test_jmix.entity/{n}.{f_name}={traducere_ro}")
+        ro_lines.append(f"{COMPANY}.{project_name}.entity/{n}.{f_name}={traducere_ro}")
 
     ro_lines.append(
-        f"com.company.test_jmix.view.{n.lower()}/{n.lower()}ListView.title=Lista {n}"
+        f"{COMPANY}.{project_name}.view.{n.lower()}/{n.lower()}ListView.title=Lista {n}"
     )
     ro_lines.append(
-        f"com.company.test_jmix.view.{n.lower()}/{n.lower()}DetailView.title=Detalii {n}"
+        f"{COMPANY}.{project_name}.view.{n.lower()}/{n.lower()}DetailView.title=Detalii {n}"
     )
 
     # 3. Functie interna sigura care scrie in fisier fara sa duplice liniile existente
@@ -441,22 +491,16 @@ def update_messages_entity(n, fi):
 
 def update_menu(n):
     print("Updating menu.xml for " + n + "...")
-    menu_path = PROIECT_PATH + "/src/main/resources/com/company/test_jmix/menu.xml"
+    menu_path = (
+        PROIECT_PATH + f"/src/main/resources/{company_path}/{project_name}/menu.xml"
+    )
 
     if not os.path.exists(menu_path):
         print("⚠️ Nu am gasit fisierul menu.xml la calea specificata!")
         return
 
     # Generam linia exacta de meniu in formatul Jmix Studio
-    menu_item = (
-        '    <item view="'
-        + n
-        + '.list" title="msg://com.company.test_jmix.view.'
-        + n.lower()
-        + "/"
-        + n.lower()
-        + 'ListView.title"/>\n'
-    )
+    menu_item = f'    <item view="{n}.list" title="msg://{COMPANY}.{project_name}.view.{n.lower()}/{n.lower()}ListView.title"/>\n'
 
     with open(menu_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -484,7 +528,7 @@ def gen_liquibase_changelog(n, fi):
 
     target_dir = (
         PROIECT_PATH
-        + f"/src/main/resources/com/company/test_jmix/liquibase/changelog/{current_year}/{current_month}"
+        + f"/src/main/resources/{company_path}/{project_name}/liquibase/changelog/{current_year}/{current_month}"
     )
     os.makedirs(target_dir, exist_ok=True)
     filename = f"{target_dir}/{timestamp_id}-{n.lower()}.xml"
@@ -531,7 +575,7 @@ def gen_liquibase_changelog(n, fi):
             xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
             objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="{timestamp_id}-1" author="Test_jmix">
+    <changeSet id="{timestamp_id}-1" author="{PROJECT}">
         <createTable tableName="{table_name}">
             <column name="ID" type="UUID">
                 <constraints
